@@ -16,13 +16,6 @@ os.makedirs("Storage/chat_memory", exist_ok=True)
 
 # Use environment variables for sensitive data - replace placeholders before running
 
-AZURE_OPENAI_ENDPOINT="https://softx-platform-ai.openai.azure.com"
-AZURE_OPENAI_API_VERSION="2024-08-01-preview"
-AZURE_OPENAI_API_KEY="8CDT7EMoIJvxKE4x748tjftiGnY4EocuiQcgCORGRgXzSvYXtA0cJQQJ99BBACYeBjFXJ3w3AAABACOG3uH5"
-
- 
-
-
 # Remove these lines since we're setting them in __init__.py
 #AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT")
 #API_KEY = os.getenv("AZURE_API_KEY")
