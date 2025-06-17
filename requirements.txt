@@ -1,0 +1,42 @@
+fastapi
+python-multipart
+uvicorn
+websockets
+dfir-iris-client
+mitreattack-python
+httpx
+aiofiles
+azure-storage-blob
+sqlalchemy
+scikit-learn
+transformers
+pdfminer
+pdfminer-six
+psycopg2
+pymongo
+python-docx
+python-dotenv
+holidays
+tiktoken
+python-pptx
+tabulate
+docx2txt
+openpyxl
+langchain-openai
+llama-index
+langid
+mammoth
+chat2plot
+langchain-community
+pandasai==2.2.5
+langchain-experimental
+instructor
+itsdangerous
+pinecone
+PyPDF2
+# selenium
+# webdriver-manager
+# spacy==3.5.0
+# openai
+
+# pandas==2.2.3
