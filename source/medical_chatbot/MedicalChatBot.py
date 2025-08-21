@@ -7,7 +7,8 @@ from source.medical_chatbot.context import INIT_SYSTEM_CONTEXT
 from pydantic import BaseModel, Field, ConfigDict
 import traceback
 import logging
-
+from dotenv import load_dotenv
+import os
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)  # Add basic logging config
 
@@ -21,15 +22,20 @@ os.makedirs("Storage/chat_memory", exist_ok=True)
 #API_KEY = os.getenv("AZURE_API_KEY")
 #API_VERSION = os.getenv("AZURE_API_VERSION")
 #DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME")
+load_dotenv()
 
 DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME")
+
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME")
 
 client = AzureOpenAI(
     api_key=AZURE_OPENAI_API_KEY,
     api_version=AZURE_OPENAI_API_VERSION,
     azure_endpoint=AZURE_OPENAI_ENDPOINT,
 )
-
 client = instructor.patch(client, mode=instructor.Mode.TOOLS)
 
 class Product_analysis(BaseModel):
