@@ -222,5 +222,13 @@
     {
         "role": "assistant",
         "content": "{\n  \"question\": \"Based on the image and information provided, it appears you may be dealing with pustules rather than simple red patches. Here are some general recommendations:\\n\\n1. **Topical Treatments:** Consider using over-the-counter topical treatments containing benzoyl peroxide or salicylic acid, which can help reduce inflammation and treat pustules.\\n2. **Gentle Cleansing:** Use a gentle, non-comedogenic cleanser to clean the affected area twice daily.\\n3. **Avoid Irritants:** Avoid using harsh skincare products or scrubbing the affected area, as this can worsen the condition.\\n4. **Hydration:** Keep your skin hydrated with a non-comedogenic moisturizer.\\n5. **Consult a Dermatologist:** If the condition does not improve or worsens, consult a dermatologist for a more tailored treatment plan.\\n\\nPlease note that these recommendations are general and may not be suitable for everyone. It's always best to consult with a healthcare professional for personalized advice.\\n\\nIs there anything else you would like to discuss or any specific products you are using that you would like me to analyze?\",\n  \"summary\": null,\n  \"product_analysis\": null\n}"
+    },
+    {
+        "role": "user",
+        "content": "\u0928\u092e\u0938\u094d\u0924\u0947"
+    },
+    {
+        "role": "assistant",
+        "content": "{\n  \"question\": \"\u0928\u092e\u0938\u094d\u0924\u0947! \u092e\u0948\u0902 \u0906\u092a\u0915\u0940 \u0924\u094d\u0935\u091a\u093e \u0915\u0940 \u0938\u092e\u0938\u094d\u092f\u093e\u0913\u0902 \u092e\u0947\u0902 \u092e\u0926\u0926 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u092f\u0939\u093e\u0901 \u0939\u0942\u0901\u0964 \u0915\u0943\u092a\u092f\u093e \u092c\u0924\u093e\u090f\u0902 \u0915\u093f \u0906\u092a \u0915\u093f\u0938 \u092c\u093e\u0930\u0947 \u092e\u0947\u0902 \u091a\u0930\u094d\u091a\u093e \u0915\u0930\u0928\u093e \u091a\u093e\u0939\u0924\u0947 \u0939\u0948\u0902?\",\n  \"summary\": null,\n  \"product_analysis\": null\n}"
     }
 ]

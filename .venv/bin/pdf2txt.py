@@ -1,4 +1,4 @@
-#!/home/softsensor/Documents/medical_chatbot_2/Medical_chatbot/medical/.venv/bin/python3
+#!/home/softsensor/Documents/medical_chatbot_2/newfolder/Medical_chatbot_2/medical/.venv/bin/python3.11
 """A command line tool for extracting text and images from PDF and
 output it to plain text, html, xml or tags.
 """

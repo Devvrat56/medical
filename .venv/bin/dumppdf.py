@@ -1,4 +1,4 @@
-#!/home/softsensor/Documents/medical_chatbot_2/Medical_chatbot/medical/.venv/bin/python3
+#!/home/softsensor/Documents/medical_chatbot_2/newfolder/Medical_chatbot_2/medical/.venv/bin/python3.11
 """Extract pdf structure in XML format"""
 
 import logging
