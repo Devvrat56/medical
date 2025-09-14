@@ -9,9 +9,10 @@ import logging
 from dotenv import load_dotenv
 from pymongo import MongoClient
 import datetime
+from googletrans import Translator   # --- NEW ---
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)  # Add basic logging config
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
@@ -28,7 +29,7 @@ try:
     mongo_client = MongoClient(MONGODB_CONNECTION_STRING)
     db = mongo_client[MONGODB_DATABASE_NAME]
     chat_sessions_collection = db[MONGODB_COLLECTION_NAME]
-    chat_sessions_collection.create_index("session_id")  # faster queries
+    chat_sessions_collection.create_index("session_id")
     logger.info("MongoDB connection established successfully")
 except Exception as e:
     logger.error(f"Failed to connect to MongoDB: {e}")
@@ -42,6 +43,9 @@ client = AzureOpenAI(
     azure_endpoint=AZURE_OPENAI_ENDPOINT,
 )
 client = instructor.patch(client, mode=instructor.Mode.TOOLS)
+
+# Translator instance
+translator = Translator()
 
 
 # --------- Pydantic Models ---------
@@ -68,8 +72,7 @@ class ClassificationResponse(BaseModel):
         None, description="Next question to ask OR a direct response."
     )
     summary: Optional[str] = Field(
-        None,
-        description="Provide summary if chat ends or enough info gathered.",
+        None, description="Provide summary if chat ends or enough info gathered."
     )
     product_analysis: Optional[Product_analysis] = Field(
         None, description="Analysis of a skin product if requested."
@@ -129,12 +132,15 @@ class MedicalChatBot:
             if os.path.exists(local_file):
                 with open(local_file, "r") as file:
                     history = json.load(file)
-                    if isinstance(history, list) and history and history[0].get("role") == "system":
+                    if (
+                        isinstance(history, list)
+                        and history
+                        and history[0].get("role") == "system"
+                    ):
                         return history
         except Exception as e:
             logger.error(f"Error loading from local storage: {e}")
 
-        # Default system prompt
         return [{"role": "system", "content": INIT_SYSTEM_CONTEXT}]
 
     # ----- Save Chat History -----
@@ -169,24 +175,34 @@ class MedicalChatBot:
             logger.warning("Chatbot flow called with no query or image.")
             return {"error": "Please provide a query or an image."}
 
-        # Build user message
+        # --- Detect user language & prepare query ---
+        user_lang = "en"
+        translated_query = self.query
+        if self.query:
+            try:
+                detected = translator.detect(self.query)
+                user_lang = detected.lang if detected.lang else "en"
+
+                if user_lang != "en":
+                    translated_query = translator.translate(self.query, dest="en").text
+                    logger.info(f"Translated user query from {user_lang} → English: {translated_query}")
+            except Exception as e:
+                logger.error(f"Language detection/translation failed: {e}")
+                translated_query = self.query
+                user_lang = "en"
+
+        # --- Build user message ---
         user_content_parts = []
         if self.query:
-            user_content_parts.append({"type": "text", "text": self.query})
+            user_content_parts.append({"type": "text", "text": translated_query})
         if self.image_base64:
             if not self.image_base64.startswith("data:image"):
                 logger.error("Invalid image_base64 format received.")
                 self.chat_history.append(
-                    {
-                        "role": "user",
-                        "content": self.query if self.query else "[User provided an invalid image]",
-                    }
+                    {"role": "user", "content": self.query if self.query else "[User provided an invalid image]"}
                 )
                 self.chat_history.append(
-                    {
-                        "role": "assistant",
-                        "content": "There seems to be an issue with the image you provided. Could you try uploading it again or describe your concern?",
-                    }
+                    {"role": "assistant", "content": "There seems to be an issue with the image you provided. Could you try uploading it again or describe your concern?"}
                 )
                 self._save_chat_history()
                 return {
@@ -205,34 +221,59 @@ class MedicalChatBot:
             logger.error("Cannot proceed with empty user content.")
             return {"error": "Internal error: No user content generated."}
 
-        # Add user query
+        # Add user message to history
         self.chat_history.append({"role": "user", "content": final_user_content})
 
-        # Call LLM
+        # --- Call LLM ---
         llm_response = llm_reply(self.chat_history)
 
-        # Handle LLM Response
+        # --- Handle LLM Response ---
         if isinstance(llm_response, ClassificationResponse):
             logger.info("LLM call successful.")
 
-            # --- FIX: Ensure match_score is never 0 ---
-            if llm_response.product_analysis and llm_response.product_analysis.match_score == 0:
+            if (
+                llm_response.product_analysis
+                and llm_response.product_analysis.match_score == 0
+            ):
                 logger.warning("LLM returned match_score=0, correcting to 1.")
                 llm_response.product_analysis.match_score = 1
 
-            # Human-readable assistant reply
-            assistant_text = (
+            # English-first assistant reply
+            assistant_text_en = (
                 llm_response.summary
                 or llm_response.question
-                or (llm_response.product_analysis.benefits_of_your_skin if llm_response.product_analysis else "")
+                or (
+                    llm_response.product_analysis.benefits_of_your_skin
+                    if llm_response.product_analysis
+                    else ""
+                )
                 or "Here are my observations."
             )
 
-            # Add readable text to history
-            self.chat_history.append({"role": "assistant", "content": assistant_text})
+            assistant_text_final = assistant_text_en
 
-            # Save structured JSON separately
+            # Translate back if needed
+            if user_lang != "en":
+                try:
+                    translated_text = translator.translate(
+                        assistant_text_en, dest=user_lang
+                    ).text
+                    assistant_text_final = translated_text
+                    logger.info(f"Translated response to {user_lang}")
+                except Exception as e:
+                    logger.error(f"Translation failed: {e}")
+
+            # Save to history
+            self.chat_history.append(
+                {"role": "assistant", "content": assistant_text_final}
+            )
+
+            # Save structured response
             structured_response = llm_response.model_dump()
+            structured_response["answer_en"] = assistant_text_en
+            structured_response["answer_final"] = assistant_text_final
+            structured_response["answer_lang"] = user_lang
+
             if chat_sessions_collection is not None:
                 chat_sessions_collection.update_one(
                     {"session_id": self.session_id},
@@ -254,7 +295,7 @@ class MedicalChatBot:
 # Example run
 if __name__ == "__main__":
     session_id = "test_session_123"
-    query = "I have this red spot on my arm, what could it be?"
+    query = "Merhaba, ateş nedir?"  # Turkish example
 
     if chat_sessions_collection:
         chat_sessions_collection.delete_one({"session_id": session_id})
@@ -265,4 +306,4 @@ if __name__ == "__main__":
 
     chatbot = MedicalChatBot(session_id=session_id, query=query)
     response = chatbot.chatbot_flow()
-    print("Response:", response)
+    print("Response:", json.dumps(response, indent=2, ensure_ascii=False))
